@@ -1,0 +1,26 @@
+﻿@using OPCWebClientEdge.Models
+
+@model OpcSessionModel
+
+@{
+    ViewData["Title"] = "Open local nodeset file";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="container-fluid browser_connect_container">
+    <div class="row browser_top_container">
+        <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+            <div class="row browser_select_connect_container">
+                @using (Html.BeginForm("Connect", "Browser"))
+                {
+                    <div class="browser_connect_selection_textbox">
+                        <p>
+                            <input id="connectButton" class="btn btn-primary btn_browser" type="submit" value="Open">
+                        <p />
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+ </div>
