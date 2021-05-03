@@ -92,47 +92,52 @@ namespace UANodesetWebViewer.Controllers
         [HttpPost]
         public async Task<ActionResult> FileUpload(IFormFile file)
         {
-            if (file.Length > 0)
+            if ((file != null) && (file.Length > 0))
             {
                 _nodeSetFilename = Path.GetTempFileName();
                 using (FileStream stream = new FileStream(_nodeSetFilename, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
                 }
+
+
+                if (_application.Server != null)
+                {
+                    _application.Stop();
+                }
+
+                await StartServerAsync();
+
+                OpcSessionModel sessionModel = new OpcSessionModel
+                {
+                    ServerIP = "localhost",
+                    ServerPort = "4840",
+                };
+                string endpointURL = "opc.tcp://" + sessionModel.ServerIP + ":" + sessionModel.ServerPort + "/";
+
+                Session session = null;
+                try
+                {
+                    session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, endpointURL, true);
+                    UpdateStatus("Connected");
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError(ex.Message);
+
+                    sessionModel.ErrorMessage = ex.Message;
+                    UpdateStatus($"Error Occured: {sessionModel.ErrorMessage}");
+                    return View("Error", sessionModel);
+                }
+
+                HttpContext.Session.SetString("EndpointUrl", endpointURL);
+
+                return View("Browse", sessionModel);
             }
-
-            if (_application.Server != null)
+            else
             {
-                _application.Stop();
+                return View("Index");
             }
-
-            await StartServerAsync();
-
-            OpcSessionModel sessionModel = new OpcSessionModel
-            {
-                ServerIP = "localhost",
-                ServerPort = "4840",
-            };
-            string endpointURL = "opc.tcp://" + sessionModel.ServerIP + ":" + sessionModel.ServerPort + "/";
-
-            Session session = null;
-            try
-            {
-                session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, endpointURL, true);
-                UpdateStatus("Connected");
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError(ex.Message);
-
-                sessionModel.ErrorMessage = ex.Message;
-                UpdateStatus($"Error Occured: {sessionModel.ErrorMessage}");
-                return View("Error", sessionModel);
-            }
-
-            HttpContext.Session.SetString("EndpointUrl", endpointURL);
-
-            return View("Browse", sessionModel);
         }
 
         private async Task StartServerAsync()

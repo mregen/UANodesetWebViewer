@@ -8,17 +8,14 @@
 
 <form method="post" enctype="multipart/form-data" asp-controller="Browser" asp-action="FileUpload">
     <div class="container-fluid browser_connect_container">
-        <div class="row browser_top_container">
-            <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
-                <div class="row browser_select_connect_container">
-                    <div class="browser_connect_selection_textbox">
-                        <p>
-                            <input type="file" name="file" />
-                            <input id="connectButton" class="btn btn-primary btn_browser" type="submit" value="Open">
-                        <p />
-                    </div>
-                </div>
-            </div>
+        <div>
+            <input class="btn btn-primary" type="file" name="file">
+        </div>
+        <div>
+            <p/>
+        </div>
+        <div >
+            <input class="btn btn-primary" type="submit" value="Open">
         </div>
     </div>
 </form>

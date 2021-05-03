@@ -1,7 +1,9 @@
 
 using Opc.Ua.Export;
 using Opc.Ua.Server;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using UANodesetWebViewer.Controllers;
 
@@ -48,7 +50,14 @@ namespace Opc.Ua.Sample
 
                 for (int i = 0; i < predefinedNodes.Count; i++)
                 {
-                    AddPredefinedNode(SystemContext, predefinedNodes[i]);
+                    try
+                    {
+                        AddPredefinedNode(SystemContext, predefinedNodes[i]);
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.TraceError(ex.Message);
+                    }
                 }
             }
         }
