@@ -1,4 +1,5 @@
-﻿namespace OPCWebClientEdge.Models
+﻿
+namespace UANodesetWebViewer.Models
 {
     /// <summary>
     /// A view model for the Browser view.

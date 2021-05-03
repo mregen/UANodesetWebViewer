@@ -97,7 +97,7 @@
 
   <ServerConfiguration>
     <BaseAddresses>
-      <ua:String>opc.tcp://localhost:4840/UA/Station</ua:String>
+      <ua:String>opc.tcp://localhost:4840/UA</ua:String>
     </BaseAddresses>
 
     <SecurityPolicies>

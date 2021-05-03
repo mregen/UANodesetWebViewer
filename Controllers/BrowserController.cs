@@ -4,15 +4,17 @@ using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 using Opc.Ua;
 using Opc.Ua.Client;
-using OPCWebClientEdge.Models;
+using Opc.Ua.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Threading.Tasks;
 using System.Web;
+using UANodesetWebViewer.Models;
 
-namespace OPCWebClientEdge.Controllers
+namespace UANodesetWebViewer.Controllers
 {
     public class StatusHub : Hub
     {
@@ -20,7 +22,10 @@ namespace OPCWebClientEdge.Controllers
 
     public class BrowserController : Controller
     {
+        public static string _nodeSetFilename;
+
         private IHubContext<StatusHub> _hubContext;
+        private static ApplicationInstance _application = new ApplicationInstance();
 
         public BrowserController(IHubContext<StatusHub> hubContext)
         {
@@ -65,6 +70,12 @@ namespace OPCWebClientEdge.Controllers
             return View("Index", sessionModel);
         }
 
+
+        public ActionResult Privacy()
+        {
+            return View("Privacy");
+        }
+
         [HttpPost]
         public ActionResult Error(string errorMessage)
         {
@@ -79,18 +90,35 @@ namespace OPCWebClientEdge.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Connect(string serverIP, string serverPort)
+        public async Task<ActionResult> FileUpload(IFormFile file)
         {
+            if (file.Length > 0)
+            {
+                _nodeSetFilename = Path.GetTempFileName();
+                using (FileStream stream = new FileStream(_nodeSetFilename, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+            }
+
+            if (_application.Server != null)
+            {
+                _application.Stop();
+            }
+
+            await StartServerAsync();
+
             OpcSessionModel sessionModel = new OpcSessionModel
             {
                 ServerIP = "localhost",
                 ServerPort = "4840",
             };
+            string endpointURL = "opc.tcp://" + sessionModel.ServerIP + ":" + sessionModel.ServerPort + "/";
 
             Session session = null;
             try
             {
-                session = await OpcSessionHelper.Instance.GetSessionAsync(HttpContext.Session.Id, "opc.tcp://" + sessionModel.ServerIP + ":" + sessionModel.ServerPort + "/", true);
+                session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, endpointURL, true);
                 UpdateStatus("Connected");
             }
             catch (Exception ex)
@@ -102,9 +130,36 @@ namespace OPCWebClientEdge.Controllers
                 return View("Error", sessionModel);
             }
 
-            HttpContext.Session.SetString("EndpointUrl", "opc.tcp://" + serverIP + ":" + serverPort);
+            HttpContext.Session.SetString("EndpointUrl", endpointURL);
 
             return View("Browse", sessionModel);
+        }
+
+        private async Task StartServerAsync()
+        {
+            // load the application configuration.
+
+            ApplicationConfiguration config = await _application.LoadApplicationConfiguration(Path.Combine(Directory.GetCurrentDirectory(), "Application.Config.xml"), false).ConfigureAwait(false);
+
+            // check the application certificate.
+            await _application.CheckApplicationInstanceCertificate(false, 0).ConfigureAwait(false);
+
+            // create cert validator
+            config.CertificateValidator = new CertificateValidator();
+            config.CertificateValidator.CertificateValidation += new CertificateValidationEventHandler(CertificateValidator_CertificateValidation);
+
+            // start the server.
+            await _application.Start(new SimpleServer()).ConfigureAwait(false);
+        }
+
+        private static void CertificateValidator_CertificateValidation(CertificateValidator validator, CertificateValidationEventArgs e)
+        {
+            if (e.Error.StatusCode == Opc.Ua.StatusCodes.BadCertificateUntrusted)
+            {
+                // accept all OPC UA client certificates
+                Console.WriteLine("Automatically trusting client certificate " + e.Certificate.Subject);
+                e.Accept = true;
+            }
         }
 
         [HttpPost]
@@ -123,6 +178,8 @@ namespace OPCWebClientEdge.Controllers
             OpcSessionModel sessionModel = new OpcSessionModel();
             sessionModel.SessionId = HttpContext.Session.Id;
 
+            _application.Stop();
+
             UpdateStatus("Disconnected");
 
             return View("Index", sessionModel);
@@ -140,7 +197,7 @@ namespace OPCWebClientEdge.Controllers
             {
                 try
                 {
-                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
 
                     session.Browse(
                         null,
@@ -186,7 +243,7 @@ namespace OPCWebClientEdge.Controllers
             try
             {
                 UpdateStatus("Connecting to OPC Server");
-                session = await OpcSessionHelper.Instance.GetSessionAsync(HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+                session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
                 endpointUrl = session.ConfiguredEndpoint.EndpointUrl.AbsoluteUri;
             }
             catch (Exception ex)
@@ -431,7 +488,7 @@ namespace OPCWebClientEdge.Controllers
 
                     UpdateStatus($"Read OPC UA node: {valueId.NodeId}");
 
-                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
                     ResponseHeader responseHeader = session.Read(null, 0, TimestampsToReturn.Both, nodesToRead, out values, out diagnosticInfos);
                     string value = "";
                     string actionResult;
@@ -472,7 +529,7 @@ namespace OPCWebClientEdge.Controllers
         [HttpPost]
         public async Task<ActionResult> VariableWrite(string jstreeNode, string newValue)
         {
-            Session session = await OpcSessionHelper.Instance.GetSessionAsync(HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+            Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
 
             bool lastRetry = false;
             while (true)
@@ -538,7 +595,7 @@ namespace OPCWebClientEdge.Controllers
                     ReferenceDescriptionCollection references = null;
                     Byte[] continuationPoint;
 
-                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
                     session.Browse(
                             null,
                             null,
@@ -620,7 +677,7 @@ namespace OPCWebClientEdge.Controllers
             {
                 try
                 {
-                    var session = await OpcSessionHelper.Instance.GetSessionAsync(HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+                    var session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
 
 
                     for (int i = 0; i < count; i++)

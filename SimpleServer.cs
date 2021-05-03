@@ -1,8 +1,10 @@
 
+using Opc.Ua;
+using Opc.Ua.Sample;
 using Opc.Ua.Server;
 using System.Collections.Generic;
 
-namespace Opc.Ua.Sample.Simulation
+namespace UANodesetWebViewer
 {
     public partial class SimpleServer : StandardServer
     {

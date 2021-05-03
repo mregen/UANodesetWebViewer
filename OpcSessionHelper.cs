@@ -1,6 +1,5 @@
 ﻿using Opc.Ua;
 using Opc.Ua.Client;
-using Opc.Ua.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,9 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
-using UANodesetWebViewer;
 
-namespace OPCWebClientEdge
+namespace UANodesetWebViewer
 {
     public class OpcSessionCacheData
     {
@@ -112,7 +110,7 @@ namespace OPCWebClientEdge
         /// Checks if there is an active OPC UA session for the provided browser session. If the persisted OPC UA session does not exist,
         /// a new OPC UA session to the given endpoint URL is established.
         /// </summary>
-        public async Task<Session> GetSessionAsync(string sessionID, string endpointURL, bool enforceTrust = false)
+        public async Task<Session> GetSessionAsync(ApplicationConfiguration config, string sessionID, string endpointURL, bool enforceTrust = false)
         {
             if (string.IsNullOrEmpty(sessionID) || string.IsNullOrEmpty(endpointURL))
             {
@@ -147,9 +145,9 @@ namespace OPCWebClientEdge
             }
 
             Uri endpointURI = new Uri(endpointURL);
-            EndpointDescriptionCollection endpointCollection = DiscoverEndpoints(Program._config, endpointURI, 10);
+            EndpointDescriptionCollection endpointCollection = DiscoverEndpoints(config, endpointURI, 10);
             EndpointDescription selectedEndpoint = SelectUaTcpEndpoint(endpointCollection);
-            EndpointConfiguration endpointConfiguration = EndpointConfiguration.Create(Program._config);
+            EndpointConfiguration endpointConfiguration = EndpointConfiguration.Create(config);
             ConfiguredEndpoint endpoint = new ConfiguredEndpoint(null, selectedEndpoint, endpointConfiguration);
 
             Session session = null;
@@ -165,7 +163,7 @@ namespace OPCWebClientEdge
                 }
 
                 session = await Session.Create(
-                    Program._config,
+                    config,
                     endpoint,
                     true,
                     false,
@@ -833,54 +831,6 @@ namespace OPCWebClientEdge
                 Exception e = new Exception("Value rank " + valueRank.ToString(CultureInfo.CurrentCulture) + " is not supported");
                 throw e;
             }
-        }
-
-        /// <summary>
-        /// Establishes an OPC UA session to the given OPC UA server with implicit trust.
-        /// </summary>
-        public async Task<Session> GetSessionWithImplicitTrust(string sessionID, string appUri)
-        {
-            // Try to connect to Server
-            Session session = null;
-            try
-            {
-                session = await GetSessionAsync(sessionID, appUri, true);
-            }
-            catch (ServiceResultException exception)
-            when ((exception.InnerResult != null)
-               && (exception.InnerResult.StatusCode == StatusCodes.BadCertificateUntrusted))
-            {
-                // Check that there is a session already in our cache data
-                OpcSessionCacheData entry;
-                if (OpcSessionCache.TryGetValue(sessionID, out entry))
-                {
-                    if (string.Equals(entry.EndpointURL.AbsoluteUri, appUri, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        // We always trust the Server for which we have generated the URL ourselves
-                        OpcSessionCacheData newValue = new OpcSessionCacheData
-                        {
-                            CertThumbprint = entry.CertThumbprint,
-                            OPCSession = entry.OPCSession,
-                            EndpointURL = entry.EndpointURL,
-                            Trusted = true
-                        };
-                        OpcSessionCache.TryUpdate(sessionID, newValue, entry);
-
-                        // try again
-                        session = await GetSessionAsync(sessionID, appUri);
-                    }
-                }
-            }
-            catch (ServiceResultException exception)
-            when ((exception.InnerResult != null)
-               && (exception.InnerResult.StatusCode != StatusCodes.BadCertificateUntrusted))
-            {
-                // any other reason than untrusted certificate
-                Trace.TraceError($"ServiceResultException occured: '{exception.Message}'");
-                throw;
-            }
-
-            return session;
         }
 
         /// <summary>

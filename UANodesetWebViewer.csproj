@@ -9,14 +9,10 @@
 
   <ItemGroup>
     <None Remove="Application.Config.xml" />
-    <None Remove="Station.NodeSet2.xml" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Application.Config.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Station.NodeSet2.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -25,6 +21,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Session" Version="2.2.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.13" />
     <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Symbols" Version="1.4.365.48" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Station.NodeSet2.xml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
