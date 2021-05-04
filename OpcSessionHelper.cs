@@ -83,7 +83,7 @@ namespace UANodesetWebViewer
                         entry.OPCSession.Close();
                     }
                 }
-                catch
+                catch (Exception)
                 {
                     // do nothing
                 }
@@ -131,9 +131,11 @@ namespace UANodesetWebViewer
                     {
                         entry.OPCSession.Close(500);
                     }
-                    catch
+                    catch (Exception)
                     {
+                        // do nothing
                     }
+
                     entry.OPCSession = null;
                 }
             }

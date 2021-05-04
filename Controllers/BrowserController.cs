@@ -22,7 +22,7 @@ namespace UANodesetWebViewer.Controllers
 
     public class BrowserController : Controller
     {
-        public static string _nodeSetFilename;
+        public static List<string> _nodeSetFilename = new List<string>();
 
         private IHubContext<StatusHub> _hubContext;
         private static ApplicationInstance _application = new ApplicationInstance();
@@ -90,16 +90,21 @@ namespace UANodesetWebViewer.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> FileUpload(IFormFile file)
+        public async Task<ActionResult> FileUpload(IFormFile[] files)
         {
-            if ((file != null) && (file.Length > 0))
+            if ((files != null) && (files.Length > 0) && (files[0].Length > 0) && (files[0].ContentType == "text/xml"))
             {
-                _nodeSetFilename = Path.GetTempFileName();
-                using (FileStream stream = new FileStream(_nodeSetFilename, FileMode.Create))
+                foreach (IFormFile file in files)
                 {
-                    await file.CopyToAsync(stream);
-                }
+                    string tempFileName = Path.GetTempFileName();
 
+                    using (FileStream stream = new FileStream(tempFileName, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    _nodeSetFilename.Add(tempFileName);
+                }
 
                 if (_application.Server != null)
                 {
