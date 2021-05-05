@@ -212,7 +212,7 @@ namespace UANodesetWebViewer.Controllers
                     session.Browse(
                         null,
                         null,
-                        ObjectIds.ObjectsFolder,
+                        ObjectIds.RootFolder,
                         0u,
                         BrowseDirection.Forward,
                         ReferenceTypeIds.HierarchicalReferences,
@@ -220,7 +220,7 @@ namespace UANodesetWebViewer.Controllers
                         0,
                         out continuationPoint,
                         out references);
-                    jsonTree.Add(new { id = ObjectIds.ObjectsFolder.ToString(), text = "Root", children = (references?.Count != 0) });
+                    jsonTree.Add(new { id = ObjectIds.RootFolder.ToString(), text = "Root", children = (references?.Count != 0) });
 
                     return Json(jsonTree);
                 }
