@@ -386,7 +386,7 @@ namespace UANodesetWebViewer.Controllers
                             jsonTree.Add(new
                             {
                                 id = ("__" + node + OpcSessionHelper.Delimiter + nodeReference.NodeId.ToString()),
-                                text = nodeReference.DisplayName.ToString() + " (ns=" + nodeReference.NodeId.NamespaceIndex + ";" + nodeReference.NodeId.ToString() + ")",
+                                text = nodeReference.DisplayName.ToString() + " (ns=" + session.NamespaceUris.ToArray()[nodeReference.NodeId.NamespaceIndex] + ";" + nodeReference.NodeId.ToString() + ")",
                                 nodeClass = nodeReference.NodeClass.ToString(),
                                 accessLevel = currentNodeAccessLevel.ToString(),
                                 eventNotifier = currentNodeEventNotifier.ToString(),
@@ -449,7 +449,7 @@ namespace UANodesetWebViewer.Controllers
                                 jsonTree.Add(new
                                 {
                                     id = jstreeNode,
-                                    text = currentNode.DisplayName.ToString() + " (ns=" + currentNode.NodeId.NamespaceIndex + ";" + currentNode.NodeId.ToString() + ")",
+                                    text = currentNode.DisplayName.ToString() + " (ns=" + session.NamespaceUris.ToArray()[currentNode.NodeId.NamespaceIndex] + ";" + currentNode.NodeId.ToString() + ")",
                                     nodeClass = currentNode.NodeClass.ToString(),
                                     accessLevel = currentNodeAccessLevel.ToString(),
                                     eventNotifier = currentNodeEventNotifier.ToString(),
