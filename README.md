@@ -5,7 +5,9 @@ An OPC UA nodeset XML file viewer running in a webpage. The webpage can be hoste
 
 It is published on DockerHub: https://hub.docker.com/r/barnstee/uanodesetwebviewer
 
-Run it via: docker run barnstee/uanodesetwebviewer:latest
+Run it via: docker run -p 8080:80 barnstee/uanodesetwebviewer:latest
+
+Then point your web browser to localhost:8080
 
 ###  Upload 
 
