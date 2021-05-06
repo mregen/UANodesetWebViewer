@@ -10,6 +10,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.IO.Packaging;
+using System.Net.Mime;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using UANodesetWebViewer.Models;
@@ -76,6 +79,68 @@ namespace UANodesetWebViewer.Controllers
             return View("Privacy");
         }
 
+        public ActionResult GenerateAAS()
+        {
+            try
+            {
+                string packagePath = Path.Combine(Directory.GetCurrentDirectory(), "UANodeSet.aasx");
+                using (Package package = Package.Open(packagePath, FileMode.Create))
+                {
+                    // add package origin part
+                    PackagePart origin = package.CreatePart(new Uri("/aasx/aasx-origin", UriKind.Relative), MediaTypeNames.Text.Plain, CompressionOption.Maximum);
+                    using (Stream fileStream = origin.GetStream(FileMode.Create))
+                    {
+                        var bytes = Encoding.ASCII.GetBytes("Intentionally empty.");
+                        fileStream.Write(bytes, 0, bytes.Length);
+                    }
+                    package.CreateRelationship(origin.Uri, TargetMode.Internal, "http://www.admin-shell.io/aasx/relationships/aasx-origin");
+
+                    // add package spec part
+                    PackagePart spec = package.CreatePart(new Uri("/aasx/aasenv-with-no-id/aasenv-with-no-id.aas.xml", UriKind.Relative), MediaTypeNames.Text.Xml);
+                    string packageSpecPath = Path.Combine(Directory.GetCurrentDirectory(), "aasenv-with-no-id.aas.xml");
+                    using (FileStream fileStream = new FileStream(packageSpecPath, FileMode.Open, FileAccess.Read))
+                    {
+                        CopyStream(fileStream, spec.GetStream());
+                    }
+                    origin.CreateRelationship(spec.Uri, TargetMode.Internal, "http://www.admin-shell.io/aasx/relationships/aas-spec");
+
+                    // add nodeset files
+                    for(int i = 0; i < _nodeSetFilename.Count; i++)
+                    {
+                        PackagePart supplementalDoc = package.CreatePart(new Uri("/aasx/nodesetFile" + i.ToString() + ".xml", UriKind.Relative), MediaTypeNames.Text.Xml);
+                        string documentPath = Path.Combine(Directory.GetCurrentDirectory(), _nodeSetFilename[i]);
+                        using (FileStream fileStream = new FileStream(documentPath, FileMode.Open, FileAccess.Read))
+                        {
+                            CopyStream(fileStream, supplementalDoc.GetStream());
+                        }
+                        package.CreateRelationship(supplementalDoc.Uri, TargetMode.Internal, "http://www.admin-shell.io/aasx/relationships/aas-suppl");
+                    }
+                }
+
+                return File(new FileStream(Path.Combine(Directory.GetCurrentDirectory(), "UANodeSet.aasx"), FileMode.Open, FileAccess.Read), "APPLICATION/octet-stream", "UANodeSet.aasx");
+            }
+            catch (Exception ex)
+            {
+                OpcSessionModel sessionModel = new OpcSessionModel
+                {
+                    ErrorMessage = HttpUtility.HtmlDecode(ex.Message)
+                };
+
+                return View("Error", sessionModel);
+            }
+        }
+
+        private void CopyStream(Stream source, Stream target)
+        {
+            const int bufSize = 0x1000;
+            byte[] buf = new byte[bufSize];
+            int bytesRead = 0;
+            while ((bytesRead = source.Read(buf, 0, bufSize)) > 0)
+            {
+                target.Write(buf, 0, bytesRead);
+            }
+        }
+
         [HttpPost]
         public ActionResult Error(string errorMessage)
         {
@@ -97,7 +162,6 @@ namespace UANodesetWebViewer.Controllers
                 foreach (IFormFile file in files)
                 {
                     string tempFileName = Path.GetTempFileName();
-
                     using (FileStream stream = new FileStream(tempFileName, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);

@@ -1,4 +1,6 @@
 
+using Newtonsoft.Json;
+using Opc.Ua;
 using Opc.Ua.Export;
 using Opc.Ua.Server;
 using System;
@@ -6,8 +8,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using UANodesetWebViewer.Controllers;
+using UANodesetWebViewer.Models;
 
-namespace Opc.Ua.Sample
+namespace UANodesetWebViewer
 {
     public class SimpleNodeManager : CustomNodeManager2
     {
@@ -45,6 +48,8 @@ namespace Opc.Ua.Sample
                     externalReferences[ObjectIds.ObjectsFolder] = references = new List<IReference>();
                 }
 
+                DTDL.GeneratedDTDL = string.Empty;
+
                 foreach (string nodesetFile in BrowserController._nodeSetFilename)
                 {
                     ImportNodeset2Xml(externalReferences, nodesetFile);
@@ -74,8 +79,20 @@ namespace Opc.Ua.Sample
                     Debug.WriteLine(i + ": " + nodeSet.NamespaceUris[i]);
                 }
 
+                // Create a DTDL Interface form our nodeset file (pick the first namespace as the name)
+                string interfaceName = nodeSet.NamespaceUris[0].Replace("http://","").Replace("/",":").TrimEnd(':');
+                DtdlInterface dtdlInterface = new DtdlInterface
+                {
+                    Id = "dtmi:" + interfaceName + ";1",
+                    Type = "Interface",
+                    DisplayName = interfaceName,
+                    Contents = new List<DtdlContents>(),
+                };
+
                 for (int i = 0; i < predefinedNodes.Count; i++)
                 {
+                    DTDL.AddNodeToDTDLInterface(predefinedNodes[i], dtdlInterface.Contents);
+
                     // debug output
                     BaseInstanceState instance = predefinedNodes[i] as BaseInstanceState;
                     if (instance != null)
@@ -111,8 +128,17 @@ namespace Opc.Ua.Sample
                         }
                     }
 
-                    AddPredefinedNode(SystemContext, predefinedNodes[i]);
+                    try
+                    {
+                        AddPredefinedNode(SystemContext, predefinedNodes[i]);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Importing node ns=" + predefinedNodes[i].NodeId.NamespaceIndex + ";i=" + predefinedNodes[i].NodeId.Identifier + " (" + predefinedNodes[i].DisplayName + ") failed with error: " + ex.Message);
+                    }
                 }
+
+                DTDL.GeneratedDTDL += JsonConvert.SerializeObject(dtdlInterface, Formatting.Indented);
             }
         }
     }

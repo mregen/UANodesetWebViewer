@@ -3,7 +3,7 @@
 @model OpcSessionModel
 
 @{
-    ViewData["Title"] = "Browsing Nodeset File";
+    ViewData["Title"] = "Browsing Nodeset File(s)";
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -58,19 +58,24 @@
             </div>
         <p />
     </div>
-    <div class="row browser_browse_disconnect_button mt-2">
-        <p>
-            @using (Html.BeginForm("Disconnect", "Browser"))
-            {
-                <input id="disconnectButton" class="btn btn-primary btn_browser" type="submit" value="Close"/>
-            }
-        </p>
+    <div class="row browser_browse_status_message_container mt-2">
+        <p class="alert alert-light">Status: <div class="alert alert-light" id="message">Browsed OPC Server</div></p>
     </div>
-</div>
-
-@*To enable display of connection messages uncomment the following lines*@
-<div class="row browser_browse_status_message_container mt-2">
-    <p class="alert alert-light">Status: <div class="alert alert-light" id="message">Browsed OPC Server</div></p>
+    <div class="row browser_browse_disconnect_button mt-2">
+        @using (Html.BeginForm("Disconnect", "Browser"))
+        {
+<input id="disconnectButton" class="btn btn-primary btn_browser" type="submit" value="Close" />}
+    </div>
+    <div class="row browser_browse_disconnect_button mt-2">
+        <br />
+        <br />
+        Generate a Plattform Industrie 4.0 Asset Admin Shell from the loaded nodeset files
+    </div>
+    <div class="row browser_browse_disconnect_button mt-2">
+        @using (Html.BeginForm("GenerateAAS", "Browser"))
+        {
+<input id="generateAASButton" class="btn btn-primary btn_browser" type="submit" value="Generate AAS" />}
+    </div>
 </div>
 
 @section scripts {

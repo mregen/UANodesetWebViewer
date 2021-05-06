@@ -1,6 +1,5 @@
 
 using Opc.Ua;
-using Opc.Ua.Sample;
 using Opc.Ua.Server;
 using System.Collections.Generic;
 
