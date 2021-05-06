@@ -7,7 +7,7 @@ It is published on DockerHub: https://hub.docker.com/r/barnstee/uanodesetwebview
 
 Run it via: docker run -p 8080:80 barnstee/uanodesetwebviewer:latest
 
-Then point your web browser to localhost:8080
+Then point your web browser to http://localhost:8080
 
 ###  Upload 
 
