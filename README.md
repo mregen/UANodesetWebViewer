@@ -1,4 +1,24 @@
 # UANodesetWebViewer
 An OPC UA nodeset XML file viewer running in a webpage. The webpage can be hosted within a Docker container. You can load nodeset files and then browse them. Super handy if you want to look at the standardized nodeset files defined in the OPC UA companion specs.
 
-![diagram](https://user-images.githubusercontent.com/47734341/117052181-b3f59000-ad17-11eb-834a-07dd75138558.png)
+## Usage
+
+It is published on DockerHub: https://hub.docker.com/r/barnstee/uanodesetwebviewer
+
+Run it via: docker run -p 8080:80 barnstee/uanodesetwebviewer:latest
+
+Then point your web browser to http://localhost:8080
+
+###  Upload 
+
+![Start](docs/Start.png)
+
+- Upload your XML NodeSet file. (NOTE: Dependent NodeSet files need to be uploaded together or in the required order.)
+
+
+### Browsing
+
+![Browsing](docs/Sample.png)
+
+- One can browse and interact with the model.
+- Currently `READ` and `WRITE` of a node is possible.
