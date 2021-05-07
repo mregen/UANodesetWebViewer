@@ -67,7 +67,7 @@ namespace UANodesetWebViewer
                     }
 
                     DTDL.GeneratedDTDL += JsonConvert.SerializeObject(dtdlInterface, Formatting.Indented);
-                    string dtdlPath = Path.Combine(Directory.GetCurrentDirectory(), "dtdl.json");
+                    string dtdlPath = Path.Combine(Directory.GetCurrentDirectory(), Path.GetFileNameWithoutExtension(BrowserController._nodeSetFilename[0]) + ".dtdl.json");
                     System.IO.File.WriteAllText(dtdlPath, DTDL.GeneratedDTDL);
                 }
 
