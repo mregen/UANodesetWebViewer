@@ -48,18 +48,34 @@ namespace UANodesetWebViewer
                     externalReferences[ObjectIds.ObjectsFolder] = references = new List<IReference>();
                 }
 
-                DTDL.GeneratedDTDL = string.Empty;
-
-                foreach (string nodesetFile in BrowserController._nodeSetFilename)
+                if (BrowserController._nodeSetFilename.Count > 0)
                 {
-                    ImportNodeset2Xml(externalReferences, nodesetFile);
+                    // Create a DTDL Interface form our nodeset file (pick the first namespace as the name)
+                    DTDL.GeneratedDTDL = string.Empty;
+                    string interfaceName = Path.GetFileNameWithoutExtension(BrowserController._nodeSetFilename[0]);
+                    DtdlInterface dtdlInterface = new DtdlInterface
+                    {
+                        Id = "dtmi:" + interfaceName + ";1",
+                        Type = "Interface",
+                        DisplayName = interfaceName,
+                        Contents = new List<DtdlContents>()
+                    };
+
+                    foreach (string nodesetFile in BrowserController._nodeSetFilename)
+                    {
+                        ImportNodeset2Xml(externalReferences, nodesetFile, dtdlInterface);
+                    }
+
+                    DTDL.GeneratedDTDL += JsonConvert.SerializeObject(dtdlInterface, Formatting.Indented);
+                    string dtdlPath = Path.Combine(Directory.GetCurrentDirectory(), "dtdl.json");
+                    System.IO.File.WriteAllText(dtdlPath, DTDL.GeneratedDTDL);
                 }
 
                 AddReverseReferences(externalReferences);
             }
         }
 
-        private void ImportNodeset2Xml(IDictionary<NodeId, IList<IReference>> externalReferences, string resourcepath)
+        private void ImportNodeset2Xml(IDictionary<NodeId, IList<IReference>> externalReferences, string resourcepath, DtdlInterface dtdlInterface)
         {
             using (Stream stream = new FileStream(resourcepath, FileMode.Open))
             {
@@ -78,16 +94,6 @@ namespace UANodesetWebViewer
                 {
                     Debug.WriteLine(i + ": " + nodeSet.NamespaceUris[i]);
                 }
-
-                // Create a DTDL Interface form our nodeset file (pick the first namespace as the name)
-                string interfaceName = nodeSet.NamespaceUris[0].Replace("http://","").Replace("/",":").TrimEnd(':');
-                DtdlInterface dtdlInterface = new DtdlInterface
-                {
-                    Id = "dtmi:" + interfaceName + ";1",
-                    Type = "Interface",
-                    DisplayName = interfaceName,
-                    Contents = new List<DtdlContents>(),
-                };
 
                 for (int i = 0; i < predefinedNodes.Count; i++)
                 {
@@ -137,8 +143,6 @@ namespace UANodesetWebViewer
                         throw new Exception("Importing node ns=" + predefinedNodes[i].NodeId.NamespaceIndex + ";i=" + predefinedNodes[i].NodeId.Identifier + " (" + predefinedNodes[i].DisplayName + ") failed with error: " + ex.Message);
                     }
                 }
-
-                DTDL.GeneratedDTDL += JsonConvert.SerializeObject(dtdlInterface, Formatting.Indented);
             }
         }
     }

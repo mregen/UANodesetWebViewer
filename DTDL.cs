@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿
 using Opc.Ua;
 using System.Collections.Generic;
 using UANodesetWebViewer.Models;
@@ -15,20 +15,20 @@ namespace UANodesetWebViewer
             // DTDL types: https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/dtdlv2.md#primitive-schemas
 
             _map.Clear();
-            _map.Add("Boolean", "boolean");
-            _map.Add("DateTime", "dateTime");
-            _map.Add("Double", "double");
-            _map.Add("Float", "float");
-            _map.Add("SByte", "integer");
-            _map.Add("Byte", "integer");
-            _map.Add("Integer", "integer");
-            _map.Add("Int16", "integer");
-            _map.Add("UInt16", "integer");
-            _map.Add("Int32", "integer");
-            _map.Add("UInt32", "integer");
-            _map.Add("Int64", "long");
-            _map.Add("UInt64", "long");
-            _map.Add("String", "string");
+            _map.Add("1", "boolean");
+            _map.Add("2", "integer");
+            _map.Add("3", "integer");
+            _map.Add("4", "integer");
+            _map.Add("5", "integer");
+            _map.Add("6", "integer");
+            _map.Add("7", "integer");
+            _map.Add("8", "long");
+            _map.Add("9", "long");
+            _map.Add("10", "float");
+            _map.Add("11", "double");
+            _map.Add("12", "string");
+            _map.Add("13", "dateTime");
+            _map.Add("19", "integer");
         }
 
         private static string GetDtdlDataType(string id)
@@ -39,7 +39,7 @@ namespace UANodesetWebViewer
             }
             catch
             {
-                return _map["Float"]; // default to float
+                return "string"; // default to string
             }
         }
 
@@ -59,7 +59,7 @@ namespace UANodesetWebViewer
                 {
                     Type = "Telemetry",
                     Name = uaNode.DisplayName.ToString(),
-                    Schema = GetDtdlDataType(uaNode.NodeClass.ToString())
+                    Schema = GetDtdlDataType(variableState.DataType.Identifier.ToString())
                 };
 
                 if (!interfaceContents.Contains(dtdlTelemetry))
