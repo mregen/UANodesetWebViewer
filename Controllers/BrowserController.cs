@@ -15,6 +15,8 @@ using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using System.Xml;
+using System.Xml.Serialization;
 using UANodesetWebViewer.Models;
 
 namespace UANodesetWebViewer.Controllers
@@ -95,9 +97,49 @@ namespace UANodesetWebViewer.Controllers
                     }
                     package.CreateRelationship(origin.Uri, TargetMode.Internal, "http://www.admin-shell.io/aasx/relationships/aasx-origin");
 
+                    // create package spec part
+                    string packageSpecPath = Path.Combine(Directory.GetCurrentDirectory(), "aasenv-with-no-id.aas.xml");
+                    using (StringReader reader = new StringReader(System.IO.File.ReadAllText(packageSpecPath)))
+                    {
+                        XmlSerializer aasSerializer = new XmlSerializer(typeof(AasEnv));
+                        AasEnv aasEnv = (AasEnv)aasSerializer.Deserialize(reader);
+
+                        aasEnv.AssetAdministrationShells.AssetAdministrationShell.SubmodelRefs.Clear();
+                        aasEnv.Submodels.Clear();
+                        foreach(string filename in _nodeSetFilename)
+                        {
+                            string submodelPath = Path.Combine(Directory.GetCurrentDirectory(), "submodel.aas.xml");
+                            using (StringReader reader2 = new StringReader(System.IO.File.ReadAllText(submodelPath)))
+                            {
+                                XmlSerializer aasSubModelSerializer = new XmlSerializer(typeof(AASSubModel));
+                                AASSubModel aasSubModel = (AASSubModel)aasSubModelSerializer.Deserialize(reader2);
+
+                                SubmodelRef nodesetReference = new SubmodelRef();
+                                nodesetReference.Keys = new Keys();
+                                nodesetReference.Keys.Key = new Key
+                                {
+                                    IdType = "URI",
+                                    Local = true,
+                                    Type = "Submodel",
+                                    Text = "http://www.opcfoundation.org/type/opcua/" + filename.Replace(".", "").ToLower()
+                            };
+
+                                aasEnv.AssetAdministrationShells.AssetAdministrationShell.SubmodelRefs.Add(nodesetReference);
+
+                                aasSubModel.Identification.Text += filename.Replace(".", "").ToLower();
+                                aasSubModel.SubmodelElements.SubmodelElement.SubmodelElementCollection.Value.SubmodelElement.File.Value =
+                                    aasSubModel.SubmodelElements.SubmodelElement.SubmodelElementCollection.Value.SubmodelElement.File.Value.Replace("TOBEREPLACED", filename);
+                                aasEnv.Submodels.Add(aasSubModel);
+                            }
+                        }
+
+                        XmlTextWriter aasWriter = new XmlTextWriter(packageSpecPath, Encoding.UTF8);
+                        aasSerializer.Serialize(aasWriter, aasEnv);
+                        aasWriter.Close();
+                    }
+
                     // add package spec part
                     PackagePart spec = package.CreatePart(new Uri("/aasx/aasenv-with-no-id/aasenv-with-no-id.aas.xml", UriKind.Relative), MediaTypeNames.Text.Xml);
-                    string packageSpecPath = Path.Combine(Directory.GetCurrentDirectory(), "aasenv-with-no-id.aas.xml");
                     using (FileStream fileStream = new FileStream(packageSpecPath, FileMode.Open, FileAccess.Read))
                     {
                         CopyStream(fileStream, spec.GetStream());
@@ -107,7 +149,7 @@ namespace UANodesetWebViewer.Controllers
                     // add nodeset files
                     for(int i = 0; i < _nodeSetFilename.Count; i++)
                     {
-                        PackagePart supplementalDoc = package.CreatePart(new Uri("/aasx/nodesetFile" + i.ToString() + ".xml", UriKind.Relative), MediaTypeNames.Text.Xml);
+                        PackagePart supplementalDoc = package.CreatePart(new Uri("/aasx/" + _nodeSetFilename[i], UriKind.Relative), MediaTypeNames.Text.Xml);
                         string documentPath = Path.Combine(Directory.GetCurrentDirectory(), _nodeSetFilename[i]);
                         using (FileStream fileStream = new FileStream(documentPath, FileMode.Open, FileAccess.Read))
                         {
@@ -157,17 +199,35 @@ namespace UANodesetWebViewer.Controllers
         [HttpPost]
         public async Task<ActionResult> FileUpload(IFormFile[] files)
         {
-            if ((files != null) && (files.Length > 0) && (files[0].Length > 0) && (files[0].ContentType == "text/xml"))
+            OpcSessionModel sessionModel = new OpcSessionModel
             {
+                ServerIP = "localhost",
+                ServerPort = "4840",
+            };
+
+            try
+            {
+                if ((files == null) || (files.Length == 0))
+                {
+                    throw new ArgumentException("No files specified!");
+                }
+
                 foreach (IFormFile file in files)
                 {
-                    string tempFileName = Path.GetTempFileName();
-                    using (FileStream stream = new FileStream(tempFileName, FileMode.Create))
+                    if ((file.Length == 0) || (file.ContentType != "text/xml"))
+                    {
+                        throw new ArgumentException("Invalid file specified!");
+                    }
+
+                    // file name validation
+                    new FileInfo(file.FileName);
+
+                    using (FileStream stream = new FileStream(file.FileName, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);
                     }
 
-                    _nodeSetFilename.Add(tempFileName);
+                    _nodeSetFilename.Add(file.FileName);
                 }
 
                 if (_application.Server != null)
@@ -177,35 +237,23 @@ namespace UANodesetWebViewer.Controllers
 
                 await StartServerAsync();
 
-                OpcSessionModel sessionModel = new OpcSessionModel
-                {
-                    ServerIP = "localhost",
-                    ServerPort = "4840",
-                };
-                string endpointURL = "opc.tcp://" + sessionModel.ServerIP + ":" + sessionModel.ServerPort + "/";
-
                 Session session = null;
-                try
-                {
-                    session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, endpointURL, true);
-                    UpdateStatus("Connected");
-                }
-                catch (Exception ex)
-                {
-                    Trace.TraceError(ex.Message);
-
-                    sessionModel.ErrorMessage = ex.Message;
-                    UpdateStatus($"Error Occured: {sessionModel.ErrorMessage}");
-                    return View("Error", sessionModel);
-                }
+                string endpointURL = "opc.tcp://" + sessionModel.ServerIP + ":" + sessionModel.ServerPort + "/";
+                session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, endpointURL, true);
+                UpdateStatus("Connected");
 
                 HttpContext.Session.SetString("EndpointUrl", endpointURL);
 
                 return View("Browse", sessionModel);
             }
-            else
+            catch (Exception ex)
             {
-                return View("Index");
+                Trace.TraceError(ex.Message);
+
+                sessionModel.ErrorMessage = ex.Message;
+                UpdateStatus($"Error Occured: {sessionModel.ErrorMessage}");
+
+                return View("Error", sessionModel);
             }
         }
 
@@ -252,7 +300,10 @@ namespace UANodesetWebViewer.Controllers
             OpcSessionModel sessionModel = new OpcSessionModel();
             sessionModel.SessionId = HttpContext.Session.Id;
 
-            _application.Stop();
+            if (_application.Server != null)
+            {
+                _application.Stop();
+            }
 
             UpdateStatus("Disconnected");
 
