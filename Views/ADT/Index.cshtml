@@ -3,7 +3,7 @@
 @model ADTModel
 
 @{
-    ViewData["Title"] = "Azure Digital Twin Upload";
+    ViewData["Title"] = "Azure Digital Twins Service Upload";
 }
 <h1>@ViewData["Title"]</h1>
 
@@ -12,7 +12,7 @@
     {
         <div class="browser_connect_selection_textbox">
             <p>
-                You first need to register this app with ADT, see <a href="https://docs.microsoft.com/en-us/azure/digital-twins/how-to-create-app-registration" target="_blank" rel="noopener noreferrer">here</a>.<br />
+                You first need to register this application with Azure Digital Twins (ADT) service, see <a href="https://docs.microsoft.com/en-us/azure/digital-twins/how-to-create-app-registration" target="_blank" rel="noopener noreferrer">here</a>.<br />
                 Ensure you have "Azure Digital Twins Data Owner" permissions to your ADT instance.
             </p>
             <p>
@@ -20,15 +20,15 @@
                 @Html.TextBox("instanceUrl", null, new { style = "width:100%;" })<br />
             <p />
             <p>
-                ADT tenant ID<br />
+                Active Directory ID<br />
                 @Html.TextBox("tenantId", null, new { style = "width:100%;" })<br />
             <p />
             <p>
-                ADT client ID<br />
+                Registered application ID<br />
                 @Html.TextBox("clientId", null, new { style = "width:100%;" })<br />
             <p />
             <p>
-                Upload the loaded nodeset files to Azure Digital Twin service<br />
+                Upload the loaded nodeset files to ADT service<br />
                 <input id="uploadButton" class="btn btn-primary btn_browser" type="submit" value="Upload">
             <p />
         </div>
