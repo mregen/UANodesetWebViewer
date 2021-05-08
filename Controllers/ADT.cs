@@ -1,11 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Newtonsoft.Json;
+﻿
+using Azure.DigitalTwins.Core;
+using Azure.Identity;
+using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 using UANodesetWebViewer.Models;
 
 namespace UANodesetWebViewer.Controllers
@@ -18,42 +15,29 @@ namespace UANodesetWebViewer.Controllers
         }
 
         [HttpPost]
-        public ActionResult Upload(string instanceUrl, string tenantId, string clientId, string secret)
+        public ActionResult Upload(string instanceUrl, string tenantId, string clientId)
         {
             ADTModel adtModel = new ADTModel
             {
                 InstanceUrl = instanceUrl,
                 TenantId = tenantId,
-                ClientId = clientId,
-                Secret = secret
+                ClientId = clientId
             };
 
             try
             {
-                string authority = "https://login.microsoftonline.com";
-                string resource = "0b07f429-9f4b-4714-9392-cc5e8e80c8b0";
+                // authenticate with ADT service
+                DigitalTwinsClient client = new DigitalTwinsClient(new Uri(instanceUrl), new InteractiveBrowserCredential(tenantId, clientId));
 
-                ClientCredential credentials = new ClientCredential(clientId, secret);
-                AuthenticationContext authContext = new AuthenticationContext($"{authority}/{tenantId}");
-                AuthenticationResult result = authContext.AcquireTokenAsync(resource, credentials).GetAwaiter().GetResult();
-
-                HttpClient httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
-
-                byte[] buffer = Encoding.UTF8.GetBytes(DTDL.GeneratedDTDL);
-                ByteArrayContent byteContent = new ByteArrayContent(buffer);
-                byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-
-                var response = httpClient.PostAsync($"{instanceUrl}/models?api-version=2020-10-31", byteContent).GetAwaiter().GetResult();
-                httpClient.Dispose();
-
-                if (response.IsSuccessStatusCode)
+                // upload
+                Azure.Response<DigitalTwinsModelData[]> response = client.CreateModelsAsync(new[] { DTDL.GeneratedDTDL }).GetAwaiter().GetResult();
+                if (response.GetRawResponse().Status == 200)
                 {
                     return View("Index", adtModel);
                 }
                 else
                 {
-                    adtModel.ErrorMessage = response.StatusCode.ToString();
+                    adtModel.ErrorMessage = response.GetRawResponse().ReasonPhrase;
                     return View("Error", adtModel);
                 }
             }
