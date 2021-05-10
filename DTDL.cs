@@ -1,6 +1,7 @@
 ﻿
 using Opc.Ua;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UANodesetWebViewer.Models;
 
 namespace UANodesetWebViewer
@@ -58,7 +59,7 @@ namespace UANodesetWebViewer
                 DtdlContents dtdlTelemetry = new DtdlContents
                 {
                     Type = "Telemetry",
-                    Name = uaNode.DisplayName.ToString(),
+                    Name = Regex.Replace(uaNode.DisplayName.ToString().Trim(), "[^A-Za-z]+", ""),
                     Schema = GetDtdlDataType(variableState.DataType.Identifier.ToString())
                 };
 
@@ -110,7 +111,7 @@ namespace UANodesetWebViewer
                 DtdlContents dtdlCommand = new DtdlContents
                 {
                     Type = "Command",
-                    Name = uaNode.DisplayName.ToString()
+                    Name = Regex.Replace(uaNode.DisplayName.ToString().Trim(), "[^A-Za-z]+", "")
                 };
 
                 if (!interfaceContents.Contains(dtdlCommand))

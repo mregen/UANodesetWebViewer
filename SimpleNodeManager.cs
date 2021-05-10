@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using UANodesetWebViewer.Controllers;
 using UANodesetWebViewer.Models;
 
@@ -52,7 +53,7 @@ namespace UANodesetWebViewer
                 {
                     // Create a DTDL Interface form our nodeset file (pick the first namespace as the name)
                     DTDL.GeneratedDTDL = string.Empty;
-                    string interfaceName = Path.GetFileNameWithoutExtension(BrowserController._nodeSetFilename[0]).Replace(".",":");
+                    string interfaceName = Regex.Replace(Path.GetFileNameWithoutExtension(BrowserController._nodeSetFilename[0]).Trim(),"[^A-Za-z0-9_]+","");
                     DtdlInterface dtdlInterface = new DtdlInterface
                     {
                         Id = "dtmi:" + interfaceName + ";1",
