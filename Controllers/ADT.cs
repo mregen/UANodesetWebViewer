@@ -31,7 +31,7 @@ namespace UANodesetWebViewer.Controllers
 
                 // upload
                 Azure.Response<DigitalTwinsModelData[]> response = client.CreateModelsAsync(new[] { DTDL.GeneratedDTDL }).GetAwaiter().GetResult();
-                if (response.GetRawResponse().Status == 200)
+                if (response.GetRawResponse().Status == 201)
                 {
                     return View("Index", adtModel);
                 }

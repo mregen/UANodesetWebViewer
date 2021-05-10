@@ -52,7 +52,7 @@ namespace UANodesetWebViewer
                 {
                     // Create a DTDL Interface form our nodeset file (pick the first namespace as the name)
                     DTDL.GeneratedDTDL = string.Empty;
-                    string interfaceName = Path.GetFileNameWithoutExtension(BrowserController._nodeSetFilename[0]);
+                    string interfaceName = Path.GetFileNameWithoutExtension(BrowserController._nodeSetFilename[0]).Replace(".",":");
                     DtdlInterface dtdlInterface = new DtdlInterface
                     {
                         Id = "dtmi:" + interfaceName + ";1",
