@@ -33,4 +33,14 @@
             <p />
         </div>
     }
+ </div>
+<div class="row browser_browse_disconnect_button mt-2">
+    <br />
+    Generate a Plattform Industrie 4.0 Asset Admin Shell from the ADT's DTDL file
+</div>
+<div class="row browser_browse_disconnect_button mt-2">
+    @using (Html.BeginForm("GenerateAAS", "ADT"))
+    {
+        <input id="generateAASButton" class="btn btn-primary btn_browser" type="submit" value="Generate AAS" />
+    }
 </div>
