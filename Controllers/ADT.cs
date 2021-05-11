@@ -89,30 +89,31 @@ namespace UANodesetWebViewer.Controllers
                         aasEnv.AssetAdministrationShells.AssetAdministrationShell.SubmodelRefs.Clear();
                         aasEnv.Submodels.Clear();
 
-                        string filename = Path.GetFileNameWithoutExtension(BrowserController._nodeSetFilename[0]);
-
-                        string submodelPath = Path.Combine(Directory.GetCurrentDirectory(), "submodel.adt.xml");
-                        using (StringReader reader2 = new StringReader(System.IO.File.ReadAllText(submodelPath)))
+                        foreach (string filenamePath in Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.dtdl.json"))
                         {
-                            XmlSerializer aasSubModelSerializer = new XmlSerializer(typeof(AASSubModel));
-                            AASSubModel aasSubModel = (AASSubModel)aasSubModelSerializer.Deserialize(reader2);
-
-                            SubmodelRef nodesetReference = new SubmodelRef();
-                            nodesetReference.Keys = new Keys();
-                            nodesetReference.Keys.Key = new Key
+                            string submodelPath = Path.Combine(Directory.GetCurrentDirectory(), "submodel.adt.xml");
+                            using (StringReader reader2 = new StringReader(System.IO.File.ReadAllText(submodelPath)))
                             {
-                                IdType = "URI",
-                                Local = true,
-                                Type = "Submodel",
-                                Text = "http://www.microsoft.com/type/dtdl/" + filename.Replace(".", "").ToLower()
-                            };
+                                XmlSerializer aasSubModelSerializer = new XmlSerializer(typeof(AASSubModel));
+                                AASSubModel aasSubModel = (AASSubModel)aasSubModelSerializer.Deserialize(reader2);
 
-                            aasEnv.AssetAdministrationShells.AssetAdministrationShell.SubmodelRefs.Add(nodesetReference);
+                                SubmodelRef nodesetReference = new SubmodelRef();
+                                nodesetReference.Keys = new Keys();
+                                nodesetReference.Keys.Key = new Key
+                                {
+                                    IdType = "URI",
+                                    Local = true,
+                                    Type = "Submodel",
+                                    Text = "http://www.microsoft.com/type/dtdl/" + Path.GetFileNameWithoutExtension(filenamePath).Replace(".", "").ToLower()
+                                };
 
-                            aasSubModel.Identification.Text += filename.Replace(".", "").ToLower();
-                            aasSubModel.SubmodelElements.SubmodelElement.SubmodelElementCollection.Value.SubmodelElement.File.Value =
-                                aasSubModel.SubmodelElements.SubmodelElement.SubmodelElementCollection.Value.SubmodelElement.File.Value.Replace("TOBEREPLACED", filename);
-                            aasEnv.Submodels.Add(aasSubModel);
+                                aasEnv.AssetAdministrationShells.AssetAdministrationShell.SubmodelRefs.Add(nodesetReference);
+
+                                aasSubModel.Identification.Text += Path.GetFileNameWithoutExtension(filenamePath).Replace(".", "").ToLower();
+                                aasSubModel.SubmodelElements.SubmodelElement.SubmodelElementCollection.Value.SubmodelElement.File.Value =
+                                    aasSubModel.SubmodelElements.SubmodelElement.SubmodelElementCollection.Value.SubmodelElement.File.Value.Replace("TOBEREPLACED", Path.GetFileNameWithoutExtension(filenamePath));
+                                aasEnv.Submodels.Add(aasSubModel);
+                            }
                         }
 
                         XmlTextWriter aasWriter = new XmlTextWriter(packageSpecPath, Encoding.UTF8);
@@ -128,16 +129,16 @@ namespace UANodesetWebViewer.Controllers
                     }
                     origin.CreateRelationship(spec.Uri, TargetMode.Internal, "http://www.admin-shell.io/aasx/relationships/aas-spec");
 
-                    // add DTDL file
-                    string dtdlPath = Path.Combine(Directory.GetCurrentDirectory(), Path.GetFileNameWithoutExtension(BrowserController._nodeSetFilename[0]) + ".dtdl.json");
-
-                    PackagePart supplementalDoc = package.CreatePart(new Uri("/aasx/" + BrowserController._nodeSetFilename[0], UriKind.Relative), MediaTypeNames.Text.Xml);
-                    string documentPath = Path.Combine(Directory.GetCurrentDirectory(), BrowserController._nodeSetFilename[0]);
-                    using (FileStream fileStream = new FileStream(documentPath, FileMode.Open, FileAccess.Read))
+                    // add DTDL files
+                    foreach (string filenamePath in Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.dtdl.json"))
                     {
-                        CopyStream(fileStream, supplementalDoc.GetStream());
+                        PackagePart supplementalDoc = package.CreatePart(new Uri("/aasx/" + Path.GetFileNameWithoutExtension(filenamePath), UriKind.Relative), MediaTypeNames.Application.Json);
+                        using (FileStream fileStream = new FileStream(filenamePath, FileMode.Open, FileAccess.Read))
+                        {
+                            CopyStream(fileStream, supplementalDoc.GetStream());
+                        }
+                        package.CreateRelationship(supplementalDoc.Uri, TargetMode.Internal, "http://www.admin-shell.io/aasx/relationships/aas-suppl");
                     }
-                    package.CreateRelationship(supplementalDoc.Uri, TargetMode.Internal, "http://www.admin-shell.io/aasx/relationships/aas-suppl");
                 }
 
                 return File(new FileStream(Path.Combine(Directory.GetCurrentDirectory(), "DTDL.aasx"), FileMode.Open, FileAccess.Read), "APPLICATION/octet-stream", "DTDL.aasx");

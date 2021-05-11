@@ -106,6 +106,7 @@ namespace UANodesetWebViewer.Controllers
 
                         aasEnv.AssetAdministrationShells.AssetAdministrationShell.SubmodelRefs.Clear();
                         aasEnv.Submodels.Clear();
+
                         foreach(string filename in _nodeSetFilename)
                         {
                             string submodelPath = Path.Combine(Directory.GetCurrentDirectory(), "submodel.aas.xml");

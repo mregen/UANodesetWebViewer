@@ -192,7 +192,7 @@ namespace UANodesetWebViewer
                         DtdlContents dtdlRelationship = new DtdlContents
                         {
                             Type = "Relationship",
-                            Name = dtdlInterfaceTupleRelationship.Item1.DisplayName,
+                            Name = "Parent",
                             Target = "dtmi:" + dtdlInterfaceTupleRelationship.Item1.DisplayName + ";1",
                         };
 
