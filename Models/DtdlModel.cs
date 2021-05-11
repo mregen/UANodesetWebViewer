@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace UANodesetWebViewer.Models
 {
-
     public class DtdlContents
     {
         [JsonProperty("@type")]

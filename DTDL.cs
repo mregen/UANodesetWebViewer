@@ -33,6 +33,7 @@ namespace UANodesetWebViewer
             _map.Add("Float", "float");
             _map.Add("Double", "double");
             _map.Add("String", "string");
+            _map.Add("LocalizedText", "string");
             _map.Add("DateTime", "dateTime");
             _map.Add("StatusCode", "integer");
             _map.Add("Integer", "integer");
