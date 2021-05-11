@@ -3,6 +3,7 @@ using Azure.DigitalTwins.Core;
 using Azure.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Packaging;
 using System.Net.Mime;
@@ -36,8 +37,15 @@ namespace UANodesetWebViewer.Controllers
                 // authenticate with ADT service
                 DigitalTwinsClient client = new DigitalTwinsClient(new Uri(instanceUrl), new InteractiveBrowserCredential(tenantId, clientId));
 
+                // read generated DTDL models
+                List<string> dtdlModels = new List<string>();
+                foreach (string dtdlFilePath in Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.dtdl.json"))
+                {
+                    dtdlModels.Add(System.IO.File.ReadAllText(dtdlFilePath));
+                }
+
                 // upload
-                Azure.Response<DigitalTwinsModelData[]> response = client.CreateModelsAsync(new[] { DTDL.GeneratedDTDL }).GetAwaiter().GetResult();
+                Azure.Response<DigitalTwinsModelData[]> response = client.CreateModelsAsync(dtdlModels).GetAwaiter().GetResult();
                 if (response.GetRawResponse().Status == 201)
                 {
                     return View("Index", adtModel);
