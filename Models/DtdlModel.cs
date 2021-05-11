@@ -24,12 +24,12 @@ namespace UANodesetWebViewer.Models
         [JsonProperty("schema", NullValueHandling = NullValueHandling.Ignore)]
         public string Schema { get; set; }
 
-        public override bool Equals(object Obj)
+        public override bool Equals(object obj)
         {
-            DtdlContents other = Obj as DtdlContents;
+            DtdlContents other = obj as DtdlContents;
             if (other != null)
             {
-                return ((Name == other.Name) && (Type == other.Type));
+                return (Name == other.Name) && (Type == other.Type);
             }
             else
             {
