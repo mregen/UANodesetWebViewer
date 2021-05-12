@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Opc.Ua;
 using Opc.Ua.Client;
 using Opc.Ua.Configuration;
+using Opc.Ua.Export;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -213,6 +214,7 @@ namespace UANodesetWebViewer.Controllers
                     throw new ArgumentException("No files specified!");
                 }
 
+                _nodeSetFilename.Clear();
                 foreach (IFormFile file in files)
                 {
                     if ((file.Length == 0) || (file.ContentType != "text/xml"))
@@ -231,6 +233,67 @@ namespace UANodesetWebViewer.Controllers
                     _nodeSetFilename.Add(file.FileName);
                 }
 
+                // Validate namespaces listed in each file and make sure all dependent nodeset files are present and loaded in the right order
+                List<string> dependencies = new List<string>();
+                foreach (string nodesetFile in _nodeSetFilename)
+                {
+                    using (Stream stream = new FileStream(nodesetFile, FileMode.Open))
+                    {
+                        UANodeSet nodeSet = UANodeSet.Read(stream);
+                        foreach (string ns in nodeSet.NamespaceUris)
+                        {
+                            string dependency = ns.Substring(7).TrimEnd('/').ToLower();
+                            dependency = dependency.Substring(dependency.IndexOf('/'));
+
+                            if (dependency.StartsWith("/"))
+                            {
+                                dependency = dependency.Substring(1);
+                            }
+
+                            if (dependency.StartsWith("ua"))
+                            {
+                                dependency = dependency.Substring(dependency.IndexOf('/') + 1);
+                            }
+
+                            if (!dependencies.Contains(dependency))
+                            {
+                                dependencies.Add(dependency);
+                            }
+                        }
+                    }
+                }
+
+                List<string> loadedNodesets = new List<string>();
+                foreach (string filename in _nodeSetFilename)
+                {
+                    loadedNodesets.Add(filename);
+                }
+
+                for (int i = 0; i < loadedNodesets.Count; i++)
+                {
+                    loadedNodesets[i] = Path.GetFileNameWithoutExtension(loadedNodesets[i]).ToLower();
+
+                    if (loadedNodesets[i].StartsWith("opc.ua."))
+                    {
+                        loadedNodesets[i] = loadedNodesets[i].Substring(7);
+                    }
+
+                    if (loadedNodesets[i].EndsWith(".nodeset2"))
+                    {
+                        loadedNodesets[i] = loadedNodesets[i].Substring(0, loadedNodesets[i].IndexOf(".nodeset2"));
+                    }
+                }
+
+                for (int i = 0; i < dependencies.Count; i++)
+                {
+                    if (!loadedNodesets.Contains(dependencies[i]))
+                    {
+                        sessionModel.ErrorMessage = "Dependent nodeset file '" + dependencies[i] + "' missing in loaded nodsets, please add it!";
+                        return View("Error", sessionModel);
+                    }
+                }
+
+                // (re-)start the UA server
                 if (_application.Server != null)
                 {
                     _application.Stop();
@@ -238,6 +301,7 @@ namespace UANodesetWebViewer.Controllers
 
                 await StartServerAsync();
 
+                // start the UA client
                 Session session = null;
                 string endpointURL = "opc.tcp://" + sessionModel.ServerIP + ":" + sessionModel.ServerPort + "/";
                 session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, endpointURL, true);
