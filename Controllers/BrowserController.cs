@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -254,6 +255,8 @@ namespace UANodesetWebViewer.Controllers
                             {
                                 dependency = dependency.Substring(dependency.IndexOf('/') + 1);
                             }
+
+                            dependency = dependency.Replace("/", "");
 
                             if (!dependencies.Contains(dependency))
                             {
