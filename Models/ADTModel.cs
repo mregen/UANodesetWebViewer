@@ -11,6 +11,6 @@ namespace UANodesetWebViewer.Models
 
         public string Secret { get; set; }
 
-        public string ErrorMessage { get; set; }
+        public string StatusMessage { get; set; }
     }
 }
