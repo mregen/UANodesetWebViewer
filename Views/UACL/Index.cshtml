@@ -1,0 +1,38 @@
+﻿@using UANodesetWebViewer.Models
+
+@model UACLModel
+
+@{
+    ViewData["Title"] = "OPC UA Cloud Library Upload";
+}
+<h1>@ViewData["Title"]</h1>
+
+<div class="row browser_top_container">
+    @using (Html.BeginForm("Upload", "UACL"))
+    {
+    <div class="browser_connect_selection_textbox">
+        <p>
+            You first need to register this application with the OPC UA Cloud Library, see TODO for details.<br />
+        </p>
+        <p>
+            OPC UA Cloud Library instance Url<br />
+            @Html.TextBox("instanceUrl", null, new { style = "width:100%;" })<br />
+        <p />
+        <p>
+            Username<br />
+            @Html.TextBox("clientId", null, new { style = "width:100%;" })<br />
+        <p />
+        <p>
+            Password<br />
+            @Html.TextBox("secret", null, new { style = "width:100%;" })<br />
+        <p />
+        <p>
+            Upload the loaded nodeset files to the OPC UA Cloud Library<br />
+            <input id="uploadButton" class="btn btn-primary btn_browser" type="submit" value="Upload">
+        <p />
+        <p>
+            <b>@Model.StatusMessage</b>
+        </p>
+    </div>
+    }
+ </div>
