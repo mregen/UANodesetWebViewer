@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Net;
+using System.Text;
 using UANodesetWebViewer.Models;
 
 namespace UANodesetWebViewer.Controllers
@@ -42,19 +43,14 @@ namespace UANodesetWebViewer.Controllers
                     BaseAddress = instanceUrl
                 };
 
-                webClient.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
-                string response = webClient.UploadString(webClient.BaseAddress + "Token", "grant_type=password&username=" + clientId + "&password=" + secret);
-                JObject reponseObject = JObject.Parse(response);
-                string token = reponseObject.GetValue("access_token").ToString();
-
                 UACLUploadModel model = new UACLUploadModel();
                 string nodesetFileName = BrowserController._nodeSetFilename[BrowserController._nodeSetFilename.Count - 1];
                 model.NodeSetXml = System.IO.File.ReadAllText(nodesetFileName);
 
                 webClient.Headers.Add("Content-Type", "application/json");
-                webClient.Headers.Add("Authorization", "Bearer " + token);
+                webClient.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(clientId + ":" + secret)));
                 string body = JsonConvert.SerializeObject(model);
-                response = webClient.UploadString(webClient.BaseAddress + "InfoModel/upload", body);
+                string response = webClient.UploadString(webClient.BaseAddress + "InfoModel/upload", "PUT", body);
                 webClient.Dispose();
 
                 if (response.Contains("200"))
