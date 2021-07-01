@@ -52,7 +52,7 @@ namespace UANodesetWebViewer.Controllers
                 string response = webClient.UploadString(webClient.BaseAddress + "InfoModel/upload", "PUT", body);
                 webClient.Dispose();
 
-                if (response.Contains("200"))
+                if (response.Contains("uploadedDate"))
                 {
                     uaclModel.StatusMessage = "Upload successful!";
                     return View("Index", uaclModel);
