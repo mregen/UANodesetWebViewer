@@ -42,17 +42,18 @@ namespace UANodesetWebViewer.Controllers
                     BaseAddress = instanceUrl
                 };
 
-                UACLUploadModel model = new UACLUploadModel();
+                AddressSpace uaAddressSpace = new AddressSpace();
                 string nodesetFileName = BrowserController._nodeSetFilename[BrowserController._nodeSetFilename.Count - 1];
-                model.NodeSetXml = System.IO.File.ReadAllText(nodesetFileName);
+                uaAddressSpace.Nodeset.NodesetXml = System.IO.File.ReadAllText(nodesetFileName);
 
                 webClient.Headers.Add("Content-Type", "application/json");
                 webClient.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(clientId + ":" + secret)));
-                string body = JsonConvert.SerializeObject(model);
+                string body = JsonConvert.SerializeObject(uaAddressSpace);
                 string response = webClient.UploadString(webClient.BaseAddress + "InfoModel/upload", "PUT", body);
                 webClient.Dispose();
 
-                if (response.Contains("uploadedDate"))
+                AddressSpace returnedAddressSpace = (AddressSpace) JsonConvert.DeserializeObject(response);
+                if (!string.IsNullOrEmpty(returnedAddressSpace.Nodeset.AddressSpaceID))
                 {
                     uaclModel.StatusMessage = "Upload successful!";
                     return View("Index", uaclModel);
