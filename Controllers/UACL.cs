@@ -52,7 +52,7 @@ namespace UANodesetWebViewer.Controllers
                 string response = webClient.UploadString(webClient.BaseAddress + "InfoModel/upload", "PUT", body);
                 webClient.Dispose();
 
-                AddressSpace returnedAddressSpace = (AddressSpace) JsonConvert.DeserializeObject(response);
+                AddressSpace returnedAddressSpace = JsonConvert.DeserializeObject<AddressSpace>(response);
                 if (!string.IsNullOrEmpty(returnedAddressSpace.Nodeset.AddressSpaceID))
                 {
                     uaclModel.StatusMessage = "Upload successful!";

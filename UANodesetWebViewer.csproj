@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="OPC Foundation\**" />
+    <Content Remove="OPC Foundation\**" />
+    <EmbeddedResource Remove="OPC Foundation\**" />
+    <None Remove="OPC Foundation\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="aasenv-with-no-id.aas.xml" />
     <None Remove="Application.Config.xml" />
     <None Remove="submodel.aas.xml" />
