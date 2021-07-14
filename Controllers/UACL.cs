@@ -104,7 +104,7 @@ namespace UANodesetWebViewer.Controllers
                     throw new ArgumentException("Invalid nodeset title entered!");
                 }
 
-                uaAddressSpace.Version = new Version(version);
+                uaAddressSpace.Version = new Version(version).ToString();
 
                 if (!string.IsNullOrWhiteSpace(copyright))
                 {
