@@ -228,7 +228,7 @@ namespace UANodesetWebViewer.Controllers
 
                     using (FileStream stream = new FileStream(file.FileName, FileMode.Create))
                     {
-                        await file.CopyToAsync(stream);
+                        await file.CopyToAsync(stream).ConfigureAwait(false);
                     }
 
                     _nodeSetFilename.Add(file.FileName);
@@ -302,12 +302,12 @@ namespace UANodesetWebViewer.Controllers
                     _application.Stop();
                 }
 
-                await StartServerAsync();
+                await StartServerAsync().ConfigureAwait(false);
 
                 // start the UA client
                 Session session = null;
                 string endpointURL = "opc.tcp://" + sessionModel.ServerIP + ":" + sessionModel.ServerPort + "/";
-                session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, endpointURL, true);
+                session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, endpointURL, true).ConfigureAwait(false);
                 UpdateStatus("Connected");
 
                 HttpContext.Session.SetString("EndpointUrl", endpointURL);
@@ -390,7 +390,7 @@ namespace UANodesetWebViewer.Controllers
             {
                 try
                 {
-                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl")).ConfigureAwait(false);
 
                     session.Browse(
                         null,
@@ -436,7 +436,7 @@ namespace UANodesetWebViewer.Controllers
             try
             {
                 UpdateStatus("Connecting to OPC Server");
-                session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+                session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl")).ConfigureAwait(false);
                 endpointUrl = session.ConfiguredEndpoint.EndpointUrl.AbsoluteUri;
             }
             catch (Exception ex)
@@ -681,7 +681,7 @@ namespace UANodesetWebViewer.Controllers
 
                     UpdateStatus($"Read OPC UA node: {valueId.NodeId}");
 
-                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl")).ConfigureAwait(false);
                     ResponseHeader responseHeader = session.Read(null, 0, TimestampsToReturn.Both, nodesToRead, out values, out diagnosticInfos);
                     string value = "";
                     string actionResult;
@@ -722,7 +722,7 @@ namespace UANodesetWebViewer.Controllers
         [HttpPost]
         public async Task<ActionResult> VariableWrite(string jstreeNode, string newValue)
         {
-            Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+            Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl")).ConfigureAwait(false);
 
             bool lastRetry = false;
             while (true)
@@ -788,7 +788,7 @@ namespace UANodesetWebViewer.Controllers
                     ReferenceDescriptionCollection references = null;
                     Byte[] continuationPoint;
 
-                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+                    Session session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl")).ConfigureAwait(false);
                     session.Browse(
                             null,
                             null,
@@ -870,7 +870,7 @@ namespace UANodesetWebViewer.Controllers
             {
                 try
                 {
-                    var session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl"));
+                    var session = await OpcSessionHelper.Instance.GetSessionAsync(_application.ApplicationConfiguration, HttpContext.Session.Id, HttpContext.Session.GetString("EndpointUrl")).ConfigureAwait(false);
 
 
                     for (int i = 0; i < count; i++)

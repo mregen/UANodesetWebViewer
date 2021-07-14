@@ -156,7 +156,7 @@ namespace UANodesetWebViewer
             try
             {
                 // lock the session creation for the enforced trust case
-                await _trustedSessionCertificateValidation.WaitAsync();
+                await _trustedSessionCertificateValidation.WaitAsync().ConfigureAwait(false);
 
                 if (enforceTrust)
                 {
@@ -172,7 +172,7 @@ namespace UANodesetWebViewer
                     sessionID,
                     60000,
                     new UserIdentity(new AnonymousIdentityToken()),
-                    null);
+                    null).ConfigureAwait(false);
 
                 if (session != null)
                 {
