@@ -226,12 +226,14 @@ namespace UANodesetWebViewer.Controllers
                     // file name validation
                     new FileInfo(file.FileName);
 
-                    using (FileStream stream = new FileStream(file.FileName, FileMode.Create))
+                    // store the file on the webserver
+                    string filePath = Path.Combine(Directory.GetCurrentDirectory(), "NodeSets", file.FileName);
+                    using (FileStream stream = new FileStream(filePath, FileMode.Create))
                     {
                         await file.CopyToAsync(stream).ConfigureAwait(false);
                     }
 
-                    _nodeSetFilename.Add(file.FileName);
+                    _nodeSetFilename.Add(filePath);
                 }
 
                 // Validate namespaces listed in each file and make sure all dependent nodeset files are present and loaded in the right order
@@ -266,6 +268,8 @@ namespace UANodesetWebViewer.Controllers
                     }
                 }
 
+                // try to deduct the UA namespace name from the nodeset filename
+                // TODO: This does not work for "nonstandard" filenames (i.e. other than something.ua.something.nodest2.xml) and therefore needs improvement!
                 List<string> loadedNodesets = new List<string>();
                 foreach (string filename in _nodeSetFilename)
                 {
@@ -276,9 +280,9 @@ namespace UANodesetWebViewer.Controllers
                 {
                     loadedNodesets[i] = Path.GetFileNameWithoutExtension(loadedNodesets[i]).ToLower();
 
-                    if (loadedNodesets[i].StartsWith("opc.ua."))
+                    if (loadedNodesets[i].Contains(".ua."))
                     {
-                        loadedNodesets[i] = loadedNodesets[i].Substring(7);
+                        loadedNodesets[i] = loadedNodesets[i].Substring(loadedNodesets[i].IndexOf(".ua.") + 4);
                     }
 
                     if (loadedNodesets[i].EndsWith(".nodeset2"))

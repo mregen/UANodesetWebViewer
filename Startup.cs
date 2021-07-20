@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.IO;
 using UANodesetWebViewer.Controllers;
 
 namespace UANodesetWebViewer
@@ -13,6 +14,16 @@ namespace UANodesetWebViewer
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+
+            if (!Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "NodeSets")))
+            {
+                Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "NodeSets"));
+            }
+
+            if (!Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "JSON")))
+            {
+                Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "JSON"));
+            }
         }
 
         public IConfiguration Configuration { get; }

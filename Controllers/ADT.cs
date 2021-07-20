@@ -50,7 +50,7 @@ namespace UANodesetWebViewer.Controllers
 
                 // read generated DTDL models
                 List<string> dtdlModels = new List<string>();
-                foreach (string dtdlFilePath in Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.dtdl.json"))
+                foreach (string dtdlFilePath in Directory.EnumerateFiles(Path.Combine(Directory.GetCurrentDirectory(),"JSON"), "*.dtdl.json"))
                 {
                     dtdlModels.Add(System.IO.File.ReadAllText(dtdlFilePath));
                 }
@@ -108,7 +108,7 @@ namespace UANodesetWebViewer.Controllers
                         aasEnv.AssetAdministrationShells.AssetAdministrationShell.SubmodelRefs.Clear();
                         aasEnv.Submodels.Clear();
 
-                        foreach (string filenamePath in Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.dtdl.json"))
+                        foreach (string filenamePath in Directory.EnumerateFiles(Path.Combine(Directory.GetCurrentDirectory(), "JSON"), "*.dtdl.json"))
                         {
                             string submodelPath = Path.Combine(Directory.GetCurrentDirectory(), "submodel.adt.xml");
                             using (StringReader reader2 = new StringReader(System.IO.File.ReadAllText(submodelPath)))
@@ -149,7 +149,7 @@ namespace UANodesetWebViewer.Controllers
                     origin.CreateRelationship(spec.Uri, TargetMode.Internal, "http://www.admin-shell.io/aasx/relationships/aas-spec");
 
                     // add DTDL files
-                    foreach (string filenamePath in Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.dtdl.json"))
+                    foreach (string filenamePath in Directory.EnumerateFiles(Path.Combine(Directory.GetCurrentDirectory(), "JSON"), "*.dtdl.json"))
                     {
                         PackagePart supplementalDoc = package.CreatePart(new Uri("/aasx/" + Path.GetFileNameWithoutExtension(filenamePath), UriKind.Relative), MediaTypeNames.Application.Json);
                         using (FileStream fileStream = new FileStream(filenamePath, FileMode.Open, FileAccess.Read))

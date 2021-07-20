@@ -175,7 +175,7 @@ namespace UANodesetWebViewer
             foreach (Tuple<DtdlInterface, string, string> dtdlInterfaceTuple in _interfaceList)
             {
                 string generatedDTDL = JsonConvert.SerializeObject(dtdlInterfaceTuple.Item1, Formatting.Indented);
-                string dtdlPath = Path.Combine(Directory.GetCurrentDirectory(), Path.GetFileNameWithoutExtension(dtdlInterfaceTuple.Item1.DisplayName) + ".dtdl.json");
+                string dtdlPath = Path.Combine(Directory.GetCurrentDirectory(), "JSON", Path.GetFileNameWithoutExtension(dtdlInterfaceTuple.Item1.DisplayName) + ".dtdl.json");
                 System.IO.File.WriteAllText(dtdlPath, generatedDTDL);
             }
         }
