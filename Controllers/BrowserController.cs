@@ -152,7 +152,7 @@ namespace UANodesetWebViewer.Controllers
                     // add nodeset files
                     for(int i = 0; i < _nodeSetFilename.Count; i++)
                     {
-                        PackagePart supplementalDoc = package.CreatePart(new Uri("/aasx/" + _nodeSetFilename[i], UriKind.Relative), MediaTypeNames.Text.Xml);
+                        PackagePart supplementalDoc = package.CreatePart(new Uri("/aasx/" + Path.GetFileNameWithoutExtension(_nodeSetFilename[i]), UriKind.Relative), MediaTypeNames.Text.Xml);
                         string documentPath = Path.Combine(Directory.GetCurrentDirectory(), _nodeSetFilename[i]);
                         using (FileStream fileStream = new FileStream(documentPath, FileMode.Open, FileAccess.Read))
                         {
